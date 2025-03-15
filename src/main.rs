@@ -1,55 +1,92 @@
+//! Main entry point for the GitFlow application.
+//!
+//! This module parses command line arguments, initializes logging, opens the Git repository,
+//! and dispatches commands to the corresponding handlers.
+//!
+//! # Details
+//! The main function coordinates application startup and error handling. The run() function
+//! encapsulates the application logic with clear documentation on arguments and behavior.
+
 mod cli;
 mod commands;
+mod configuration;
 mod error;
 mod git;
 mod utils;
 
 use cli::Cli;
-use commands::{cascade, create};
+use commands::{cascade, config, create, show};
 use error::Result;
 
 use clap::Parser;
 use git2::Repository;
 use log::error;
 
-/// The main entry point of the application
+/// Entry point of the application.
 fn main() {
-    // Parse command line arguments
+    // Parse command line arguments.
     let cli = Cli::parse();
+    utils::init_logger(cli.verbose);
 
-    // Run the application and handle any errors
+    // Run the application logic and handle any errors.
     if let Err(e) = run(cli) {
         error!("Error: {}", e);
         std::process::exit(1);
     }
 }
 
-/// Runs the application logic based on the parsed CLI arguments
+/// Runs the application logic based on the parsed CLI arguments.
 ///
 /// # Arguments
 ///
-/// * `cli` - A struct containing the parsed command line arguments
+/// * `cli` - A struct containing the parsed command line arguments.
 ///
 /// # Returns
 ///
-/// * `Result<()>` - Returns an empty Ok result on success, or an error on failure
+/// * `Result<()>` - Returns Ok on success, or an error on failure.
 fn run(cli: cli::Cli) -> Result<()> {
-    // Open the git repository located at the current directory
-    let _repo = Repository::open(".")?;
+    match &cli.command {
+        cli::Commands::Config {
+            default_base,
+            detection_strategy,
+            add_relationship,
+            remove_relationship,
+        } => {
+            return config::handle_config(
+                default_base.as_deref(),
+                *detection_strategy,
+                add_relationship.as_deref(),
+                remove_relationship.as_deref(),
+            );
+        }
+        _ => {}
+    }
 
-    // Handle the appropriate command based on the parsed CLI arguments
+    // Open the Git repository located in the current directory.
+    let repo = Repository::open(".")?;
+
+    // Dispatch based on the user's command.
     match cli.command {
         cli::Commands::Create { name, parent } => {
-            create::handle_new_branch(&_repo, &name, parent.as_deref()).map_err(|e| {
+            create::handle_new_branch(&repo, &name, parent.as_deref()).map_err(|e| {
                 println!("Error: {}", e);
                 e
             })?;
         }
-        cli::Commands::Cascade { yes } => {
-            cascade::handle_cascade(&_repo, yes).map_err(|e| {
+        cli::Commands::Cascade { yes, strategy } => {
+            cascade::handle_cascade(&repo, yes, strategy).map_err(|e| {
                 println!("Error: {}", e);
                 e
             })?;
+        }
+        cli::Commands::Show { strategy } => {
+            show::handle_show(&repo, strategy).map_err(|e| {
+                println!("Error: {}", e);
+                e
+            })?;
+        }
+        cli::Commands::Config { .. } => {
+            // Already handled above.
         }
     }
     Ok(())
