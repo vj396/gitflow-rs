@@ -2,9 +2,10 @@ mod cli;
 mod commands;
 mod error;
 mod git;
+mod utils;
 
 use cli::Cli;
-use commands::create;
+use commands::{cascade, create};
 use error::Result;
 
 use clap::Parser;
@@ -31,7 +32,7 @@ fn main() {
 ///
 /// # Returns
 ///
-/// * `Result<(), Box<dyn std::error::Error>>` - Returns an empty Ok result on success, or an error on failure
+/// * `Result<()>` - Returns an empty Ok result on success, or an error on failure
 fn run(cli: cli::Cli) -> Result<()> {
     // Open the git repository located at the current directory
     let _repo = Repository::open(".")?;
@@ -39,7 +40,16 @@ fn run(cli: cli::Cli) -> Result<()> {
     // Handle the appropriate command based on the parsed CLI arguments
     match cli.command {
         cli::Commands::Create { name, parent } => {
-            create::handle_new_branch(&_repo, &name, parent.as_deref())?;
+            create::handle_new_branch(&_repo, &name, parent.as_deref()).map_err(|e| {
+                println!("Error: {}", e);
+                e
+            })?;
+        }
+        cli::Commands::Cascade { yes } => {
+            cascade::handle_cascade(&_repo, yes).map_err(|e| {
+                println!("Error: {}", e);
+                e
+            })?;
         }
     }
     Ok(())

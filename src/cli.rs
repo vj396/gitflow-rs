@@ -44,4 +44,10 @@ pub enum Commands {
         #[clap(long)]
         parent: Option<String>,
     },
+
+    Cascade {
+        /// Confirm all merges without prompting
+        #[clap(short, long)]
+        yes: bool,
+    },
 }
