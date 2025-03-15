@@ -9,6 +9,14 @@ pub struct StatusEntry {
 }
 
 /// Get the status of files in the repository
+///
+/// # Arguments
+///
+/// * `repo` - A reference to the Git repository
+///
+/// # Returns
+///
+/// * `Result<Vec<StatusEntry>>` - Returns a vector of StatusEntry, or an error if it fails
 pub fn get_repo_status(repo: &Repository) -> Result<Vec<StatusEntry>> {
     let mut status_opts = StatusOptions::new();
     status_opts.include_untracked(true);
