@@ -53,25 +53,53 @@ pub fn parse_github_url(url: &str) -> Result<(String, String)> {
     )))
 }
 
-/// Push the current branch to the remote repository
 pub fn push_branch(repo: &Repository, branch_name: &str) -> Result<()> {
     let remote_name = "origin";
     let mut remote = repo.find_remote(remote_name)?;
-
+    
     // Check if remote exists
     if remote.url().is_none() {
         return Err(GitFlowError::RemoteNotFound(remote_name.to_string()));
     }
-
+    
     // Create a push refspec
     let refspec = format!("refs/heads/{}:refs/heads/{}", branch_name, branch_name);
-
-    // Configure push options with authentication
-    let mut push_options = setup_push_options()?;
-
+    
+    // Configure callbacks with better SSH authentication handling
+    let mut callbacks = git2::RemoteCallbacks::new();
+    callbacks.credentials(|url, username_from_url, allowed_types| {
+        // Try to use SSH key authentication
+        let username = username_from_url.unwrap_or("git");
+        
+        // Try multiple SSH key locations
+        let ssh_keys = [
+            dirs::home_dir().map(|h| h.join(".ssh/id_ed25519")),
+            dirs::home_dir().map(|h| h.join(".ssh/id_rsa")),
+        ];
+        
+        for key_path_opt in ssh_keys.iter() {
+            if let Some(key_path) = key_path_opt {
+                if key_path.exists() {
+                    info!("Trying SSH key: {}", key_path.display());
+                    if let Ok(cred) = git2::Cred::ssh_key(username, None, key_path, None) {
+                        return Ok(cred);
+                    }
+                }
+            }
+        }
+        
+        // Fall back to default SSH key
+        info!("Using default SSH authentication mechanism");
+        git2::Cred::ssh_key_from_agent(username)
+    });
+    
+    // Configure push options with retry attempts
+    let mut push_options = PushOptions::new();
+    push_options.remote_callbacks(callbacks);
+    
     // Push the branch
     remote.push(&[&refspec], Some(&mut push_options))?;
-
+    
     info!("Pushed branch {} to remote {}", branch_name, remote_name);
     Ok(())
 }
