@@ -89,7 +89,9 @@ pub fn handle_cascade(
     }
 
     if branch_tree.is_empty() {
-        info!("No branch hierarchy detected with any strategy. Try setting up manual relationships.");
+        info!(
+            "No branch hierarchy detected with any strategy. Try setting up manual relationships."
+        );
         return Ok(());
     }
 
@@ -103,7 +105,9 @@ pub fn handle_cascade(
 
     // Confirm execution unless the '--yes' flag is provided.
     if !yes && !prompt_confirmation("Proceed with merges?")? {
-        return Err(GitFlowError::Aborted("Merge operation cancelled".to_string()));
+        return Err(GitFlowError::Aborted(
+            "Merge operation cancelled".to_string(),
+        ));
     }
 
     let mut processed = HashMap::new();
@@ -155,7 +159,7 @@ fn merge_recursive(
         for child in children {
             // Attempt merge of parent branch into child branch.
             match git::merge_branch(repo, branch, child) {
-                Ok(_) => {},
+                Ok(_) => {}
                 Err(e) => {
                     warn!("Failed to merge {} into {}: {}", branch, child, e);
                 }

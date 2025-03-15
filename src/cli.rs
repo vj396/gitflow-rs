@@ -50,7 +50,22 @@ pub enum Commands {
         strategy: Option<BranchDetectionStrategy>,
     },
 
-    /// Show the branch structure with PR information
+    /// Sync the local branch with remote and create a pull request
+    Sync {
+        /// Title of the PR (if not provided, will use the last commit message)
+        #[clap(long)]
+        title: Option<String>,
+
+        /// Skip confirmation prompt
+        #[clap(long)]
+        yes: bool,
+
+        /// Base branch for PR (if not provided, will try to determine from branch structure)
+        #[clap(long)]
+        base: Option<String>,
+    },
+
+    /// Show the branch structure with PR information.
     Show {
         /// Strategy for detecting branch relationships
         #[clap(long, value_enum)]

@@ -23,11 +23,29 @@ pub enum GitFlowError {
     #[error("Configuration error: {0}")]
     Config(String),
 
+    #[error("Environment error: {0}")]
+    Environment(String),
+
+    #[error("GitHub API error: {0}")]
+    GitHub(#[from] octocrab::Error),
+
     #[error("IO error: {0}")]
     Io(#[from] io::Error),
 
+    #[error("Remote not found: {0}")]
+    RemoteNotFound(String),
+
+    #[error("Runtime error: {0}")]
+    Runtime(tokio::io::Error),
+
     #[error("Serialization error: {0}")]
     Serialization(#[from] serde_json::Error),
+
+    #[error("Invalid URL: {0}")]
+    Url(#[from] url::ParseError),
+
+    #[error("Unknown error: {0}")]
+    Unknown(String),
 }
 
 /// Result type alias to simplify function signatures

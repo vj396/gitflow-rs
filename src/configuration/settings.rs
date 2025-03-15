@@ -12,7 +12,7 @@ use crate::git::branch::BranchRelationStrategy;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::fs;
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 
 /// PR information stored in configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -28,14 +28,14 @@ pub struct PrInfo {
 pub struct Config {
     /// Map of branch names to PR information.
     pub prs: HashMap<String, PrInfo>,
-    
+
     /// Default base branch (usually main or master).
     pub default_base_branch: String,
-    
+
     /// Manual branch relationships for explicit configuration.
     #[serde(default)]
     pub branch_relationships: HashMap<String, Vec<String>>,
-    
+
     /// Strategy to use for detecting branch relationships.
     #[serde(default)]
     pub branch_detection_strategy: BranchRelationStrategy,
@@ -54,7 +54,7 @@ impl Config {
     /// ```
     pub fn load() -> Result<Self> {
         let config_path = get_config_path()?;
-        
+
         if !config_path.exists() {
             // Create default configuration if none exists.
             let config = Config {
@@ -66,13 +66,13 @@ impl Config {
             config.save()?;
             return Ok(config);
         }
-        
+
         let json = fs::read_to_string(&config_path)
             .map_err(|e| GitFlowError::Config(format!("Could not read config file: {}", e)))?;
         serde_json::from_str(&json)
             .map_err(|e| GitFlowError::Config(format!("Invalid config file format: {}", e)))
     }
-    
+
     /// Save configuration to disk.
     ///
     /// # Returns
@@ -87,15 +87,16 @@ impl Config {
         let config_path = get_config_path()?;
         // Ensure the configuration directory exists.
         if let Some(parent) = config_path.parent() {
-            fs::create_dir_all(parent)
-                .map_err(|e| GitFlowError::Config(format!("Could not create config directory: {}", e)))?;
+            fs::create_dir_all(parent).map_err(|e| {
+                GitFlowError::Config(format!("Could not create config directory: {}", e))
+            })?;
         }
         let json = serde_json::to_string_pretty(self)?;
         fs::write(&config_path, json)
             .map_err(|e| GitFlowError::Config(format!("Could not write config file: {}", e)))?;
         Ok(())
     }
-    
+
     /// Add a PR to the configuration.
     ///
     /// # Arguments
@@ -116,7 +117,7 @@ impl Config {
         self.save()?;
         Ok(())
     }
-    
+
     /// Get PR information for a specific branch.
     ///
     /// # Arguments
@@ -134,7 +135,7 @@ impl Config {
     pub fn get_pr(&self, branch: &str) -> Option<&PrInfo> {
         self.prs.get(branch)
     }
-    
+
     /// Set the default base branch.
     ///
     /// # Arguments
@@ -154,7 +155,7 @@ impl Config {
         self.save()?;
         Ok(())
     }
-    
+
     /// Set the branch detection strategy.
     ///
     /// # Arguments
@@ -169,12 +170,15 @@ impl Config {
     /// ```rust
     /// // config.set_branch_detection_strategy(BranchRelationStrategy::Manual)?;
     /// ```
-    pub fn set_branch_detection_strategy(&mut self, strategy: BranchRelationStrategy) -> Result<()> {
+    pub fn set_branch_detection_strategy(
+        &mut self,
+        strategy: BranchRelationStrategy,
+    ) -> Result<()> {
         self.branch_detection_strategy = strategy;
         self.save()?;
         Ok(())
     }
-    
+
     /// Add a manual branch relationship.
     ///
     /// # Arguments
@@ -198,7 +202,7 @@ impl Config {
         self.save()?;
         Ok(())
     }
-    
+
     /// Remove a manual branch relationship.
     ///
     /// # Arguments

@@ -53,7 +53,7 @@ impl Default for BranchRelationStrategy {
 pub fn get_current_branch(repo: &Repository) -> Result<String> {
     let head = repo.head()?;
 
-    if (!head.is_branch()) {
+    if !head.is_branch() {
         return Err(GitFlowError::Git(git2::Error::from_str(
             "HEAD is not a branch (detached HEAD state)",
         )));
@@ -152,7 +152,7 @@ pub fn get_branch_tree(
 ///
 /// # Arguments
 /// * repo - Reference to the Git repository.
-/// 
+///
 /// # Returns
 /// A Result containing a HashMap mapping parent branches to their child branch lists.
 fn get_branch_tree_by_history(repo: &Repository) -> Result<HashMap<String, Vec<String>>> {
@@ -199,7 +199,7 @@ fn get_branch_tree_by_history(repo: &Repository) -> Result<HashMap<String, Vec<S
 ///
 /// # Arguments
 /// * repo - Reference to the Git repository.
-/// 
+///
 /// # Returns
 /// A Result containing a HashMap mapping parent branches to their child branch lists.
 fn get_branch_tree_by_creation_time(repo: &Repository) -> Result<HashMap<String, Vec<String>>> {
@@ -250,7 +250,7 @@ fn get_branch_tree_by_creation_time(repo: &Repository) -> Result<HashMap<String,
 /// # Arguments
 /// * repo - Reference to the Git repository.
 /// * default_branch - The branch to use as the root for others.
-/// 
+///
 /// # Returns
 /// A Result containing a HashMap with the default branch mapped to all other branches.
 fn get_branch_tree_with_default_root(
@@ -291,7 +291,7 @@ fn get_branch_tree_with_default_root(
 /// * parent - The candidate parent branch name.
 /// * child - The candidate child branch name.
 /// * repo - The repository reference.
-/// 
+///
 /// # Returns
 /// A Result with true if it's a direct parent-child relationship, false otherwise.
 pub fn is_direct_parent_child(
@@ -323,7 +323,7 @@ pub fn is_direct_parent_child(
 /// * repo - The repository reference.
 /// * commit - The commit to evaluate.
 /// * potential_ancestor - The commit considered as an ancestor candidate.
-/// 
+///
 /// # Returns
 /// A Result with true if 'commit' is a descendant, false otherwise.
 pub fn is_descendant_of(
@@ -354,7 +354,7 @@ pub fn is_descendant_of(
 /// * repo - The repository reference.
 /// * branch1 - The first branch name.
 /// * branch2 - The second branch name.
-/// 
+///
 /// # Returns
 /// A Result with true if the branches are related, false otherwise.
 fn are_branches_related(repo: &Repository, branch1: &str, branch2: &str) -> Result<bool> {

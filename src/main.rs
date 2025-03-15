@@ -12,10 +12,11 @@ mod commands;
 mod configuration;
 mod error;
 mod git;
+mod github;
 mod utils;
 
 use cli::Cli;
-use commands::{cascade, config, create, show};
+use commands::{cascade, config, create, show, sync};
 use error::Result;
 
 use clap::Parser;
@@ -85,6 +86,13 @@ fn run(cli: cli::Cli) -> Result<()> {
                 e
             })?;
         }
+        cli::Commands::Sync { title, yes, base } => {
+            sync::handle_sync(&repo, title.as_deref(), yes, base.as_deref()).map_err(|e| {
+                println!("Error: {}", e);
+                e
+            })?;
+        }
+
         cli::Commands::Config { .. } => {
             // Already handled above.
         }
