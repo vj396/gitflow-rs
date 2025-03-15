@@ -4,6 +4,14 @@ use log::{debug, info};
 use std::collections::{HashMap, HashSet};
 
 /// Build a tree of branches showing parent-child relationships
+///
+/// # Arguments
+///
+/// * `repo` - A reference to the Git repository
+///
+/// # Returns
+///
+/// * `Result<HashMap<String, Vec<String>>>` - Returns a hashmap representing the branch tree, or an error if it fails
 pub fn get_branch_tree(repo: &Repository) -> Result<HashMap<String, Vec<String>>> {
     let mut tree = HashMap::new();
     let branches = repo.branches(Some(BranchType::Local))?;
@@ -121,6 +129,17 @@ pub fn create_new_branch(repo: &Repository, name: &str, parent: Option<&str>) ->
 }
 
 /// Check if there's a more direct parent between potential parent and child
+///
+/// # Arguments
+///
+/// * `all_branches` - A list of all branch names
+/// * `parent` - The potential parent branch name
+/// * `child` - The potential child branch name
+/// * `repo` - A reference to the Git repository
+///
+/// # Returns
+///
+/// * `Result<bool>` - Returns true if there is a more direct parent, false otherwise
 pub fn is_direct_parent_child(
     all_branches: &[String],
     parent: &str,
@@ -148,6 +167,16 @@ pub fn is_direct_parent_child(
 }
 
 /// Check if commit is a descendant of potential_ancestor
+///
+/// # Arguments
+///
+/// * `repo` - A reference to the Git repository
+/// * `commit` - The commit to check
+/// * `potential_ancestor` - The potential ancestor commit
+///
+/// # Returns
+///
+/// * `Result<bool>` - Returns true if the commit is a descendant, false otherwise
 pub fn is_descendant_of(
     repo: &Repository,
     commit: &Commit,
@@ -175,6 +204,14 @@ pub fn is_descendant_of(
 }
 
 /// Find root branches (those without parents)
+///
+/// # Arguments
+///
+/// * `branch_tree` - A hashmap representing the branch tree
+///
+/// # Returns
+///
+/// * `Vec<String>` - Returns a vector of root branch names
 pub fn find_root_branches(branch_tree: &HashMap<String, Vec<String>>) -> Vec<String> {
     let all_children: HashSet<String> = branch_tree.values().flatten().cloned().collect();
 
@@ -186,6 +223,15 @@ pub fn find_root_branches(branch_tree: &HashMap<String, Vec<String>>) -> Vec<Str
 }
 
 /// Checkout a branch by name
+///
+/// # Arguments
+///
+/// * `repo` - A reference to the Git repository
+/// * `branch_name` - The name of the branch to checkout
+///
+/// # Returns
+///
+/// * `Result<()>` - Returns an empty Ok result on success, or an error on failure
 pub fn checkout_branch(repo: &Repository, branch_name: &str) -> Result<()> {
     let obj = repo.revparse_single(&format!("refs/heads/{}", branch_name))?;
     repo.checkout_tree(&obj, None)?;
