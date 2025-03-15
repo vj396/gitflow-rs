@@ -1,5 +1,5 @@
 //! Module for the 'show' command.
-//! 
+//!
 //! This module handles displaying the Git branch hierarchy along with pull request (PR)
 //! information and commit messages. It loads configuration, determines the branch detection
 //! strategy, and prints the branch structure accordingly.

@@ -9,7 +9,10 @@ colored = "3.0.0"
 dirs = "6.0.0"
 git2 = "0.20.0"
 log = "0.4.26"
+octocrab = "0.43.0"
 serde = { version = "1.0.219", features = ["serde_derive"] }
 serde_json = "1.0.140"
 thiserror = "2.0.11"
+tokio = { version = "1.44.1", features = ["full"] }
 tracing-subscriber = { version = "0.3.19", features = ["env-filter"] }
+url = "2.5.4"
