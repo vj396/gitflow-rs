@@ -1,40 +1,48 @@
 use crate::error::{GitFlowError, Result};
-use git2::Repository;
+use git2::{Repository, StatusOptions};
 use log::info;
 use std::path::Path;
 
 /// Commit changes to the repository
 pub fn commit_changes(repo: &Repository, message: &str) -> Result<()> {
+    // Stage all files
     let mut index = repo.index()?;
-
-    // Add all modified files
-    for entry in repo.statuses(None)?.iter() {
-        if entry.status().is_wt_new()
-            || entry.status().is_wt_modified()
-            || entry.status().is_wt_deleted()
-        {
-            if let Some(path) = entry.path() {
-                index.add_path(Path::new(path))?;
-            }
+    
+    // Add all files (including new, modified, and deleted)
+    let mut status_opts = StatusOptions::new();
+    status_opts.include_untracked(true);
+    status_opts.recurse_untracked_dirs(true);
+        
+    let statuses = repo.statuses(Some(&mut status_opts))?;
+    for entry in statuses.iter() {
+        let path = match entry.path() {
+            Some(p) => p,
+            None => continue,
+        };
+        
+        if entry.status().is_wt_new() || 
+           entry.status().is_wt_modified() || 
+           entry.status().is_wt_renamed() || 
+           entry.status().is_wt_typechange() {
+            index.add_path(Path::new(path))?;
+        } else if entry.status().is_wt_deleted() {
+            index.remove_path(Path::new(path))?;
         }
     }
-
-    // Write the index
+    
+    // Write the index to disk
     let oid = index.write_tree()?;
-
-    // Get the signature
+    
+    // Create the commit
     let signature = repo.signature()?;
-
-    // Get the parent commit if it exists
     let parent_commit = match repo.head() {
         Ok(head) => Some(head.peel_to_commit()?),
         Err(_) => None,
     };
-
+    
     let tree = repo.find_tree(oid)?;
-
+    
     if let Some(parent) = parent_commit {
-        // Create the commit with a parent
         repo.commit(
             Some("HEAD"),
             &signature,
@@ -44,10 +52,19 @@ pub fn commit_changes(repo: &Repository, message: &str) -> Result<()> {
             &[&parent],
         )?;
     } else {
-        // Create initial commit
-        repo.commit(Some("HEAD"), &signature, &signature, message, &tree, &[])?;
+        repo.commit(
+            Some("HEAD"),
+            &signature,
+            &signature,
+            message,
+            &tree,
+            &[],
+        )?;
     }
-
+    
+    // Make sure HEAD points to the new commit
+    index.write()?;
+    
     info!("Changes committed successfully");
     Ok(())
 }

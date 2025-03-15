@@ -67,7 +67,7 @@ pub fn push_branch(repo: &Repository, branch_name: &str) -> Result<()> {
     
     // Configure callbacks with better SSH authentication handling
     let mut callbacks = git2::RemoteCallbacks::new();
-    callbacks.credentials(|url, username_from_url, allowed_types| {
+    callbacks.credentials(|_url, username_from_url, _allowed_types| {
         // Try to use SSH key authentication
         let username = username_from_url.unwrap_or("git");
         
